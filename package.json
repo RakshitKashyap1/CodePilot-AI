@@ -1,0 +1,19 @@
+{
+  "name": "codepilot-ai",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=frontend",
+    "build": "npm run build --workspace=frontend",
+    "start": "npm run start --workspace=frontend",
+    "lint": "npm run lint --workspace=frontend",
+    "backend": ".\\venv\\Scripts\\python.exe manage.py runserver",
+    "dev:all": "npx concurrently \"npm run dev\" \"npm run backend\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

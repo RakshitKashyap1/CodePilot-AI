@@ -1,0 +1,42 @@
+name: CodePilot AI CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Run Linter (Flake8)
+      run: |
+        pip install flake8
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        
+    - name: Run Tests
+      env:
+        SECRET_KEY: "ci-secret-key"
+        DB_NAME: "test_db"
+        DB_USER: "user"
+        DB_PASSWORD: "password"
+        DB_HOST: "localhost"
+        DB_PORT: "5432"
+        CELERY_BROKER_URL: "redis://localhost:6379/0"
+      run: |
+        # We skip DB tests in CI unless we spin up a postgres service
+        # In a real scenario, we would add a 'services:' block for postgres/redis
+        python manage.py test --exclude-tag=db
