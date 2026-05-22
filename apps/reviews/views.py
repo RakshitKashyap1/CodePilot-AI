@@ -54,9 +54,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         # Save the review, attaching it to the current user
         review = serializer.save(user=request.user, status=Review.Status.PENDING)
         
-        # Trigger Celery Task (Phase 10)
-        # This returns instantly, allowing the HTTP response to finish.
-        from apps.reviews.tasks import generate_ai_review_task
+        from .tasks import generate_ai_review_task
         generate_ai_review_task.delay(review.id)
 
         # Return a standardized API response

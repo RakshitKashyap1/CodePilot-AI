@@ -1,9 +1,10 @@
 import os
+import secrets
 import requests
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.conf import settings
-from .models import GitHubProfile
+from .models import GitHubProfile, GitHubWebhook
 from apps.reviews.models import RepositoryAnalysis
 from services.github_service import GitHubService
 from utils.responses import api_response
@@ -51,7 +52,7 @@ class GitHubOAuthCallbackView(APIView):
         gh_user = user_info_resp.json()
 
         # Save or update profile
-        GitHubProfile.objects.update_or_create(
+        profile, _ = GitHubProfile.objects.update_or_create(
             user=request.user,
             defaults={
                 'github_id': str(gh_user.get('id')),
@@ -60,7 +61,10 @@ class GitHubOAuthCallbackView(APIView):
             }
         )
 
-        return api_response(message="GitHub linked successfully")
+        # Generate a webhook secret for future webhook creation
+        webhook_secret = secrets.token_hex(32)
+
+        return api_response(message="GitHub linked successfully", data={"webhook_secret": webhook_secret})
 
 class ImportRepositoryView(APIView):
     """Fetches user repos from GitHub and imports a selected one into CodePilot."""
