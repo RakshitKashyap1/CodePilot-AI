@@ -11,11 +11,25 @@ def custom_exception_handler(exc, context):
     response = exception_handler(exc, context)
 
     if response is not None:
+        # Extract a meaningful message from validation errors
+        message = response.data.get('detail', None)
+        if not message:
+            # Validation errors use field names as keys, e.g. {"email": ["Enter a valid email."]}
+            for field, errors in response.data.items():
+                if isinstance(errors, list) and len(errors) > 0:
+                    message = str(errors[0])
+                    break
+                elif isinstance(errors, str):
+                    message = errors
+                    break
+            if not message:
+                message = 'An error occurred.'
+
         custom_response_data = {
             'success': False,
             'error': {
                 'status_code': response.status_code,
-                'message': response.data.get('detail', 'An error occurred.'),
+                'message': message,
                 'details': response.data
             }
         }
