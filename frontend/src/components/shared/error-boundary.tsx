@@ -17,7 +17,8 @@ export class ErrorBoundary extends Component<Props, State> {
     hasError: false,
   };
 
-  public static getDerivedStateFromError(_: Error): State {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public static getDerivedStateFromError(error: Error): State {
     return { hasError: true };
   }
 
@@ -35,7 +36,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <div className="space-y-2">
             <h2 className="text-2xl font-bold">Something went wrong</h2>
             <p className="text-muted-foreground max-w-md">
-              The AI engine encountered an unexpected error. Don't worry, your code is safe.
+               The AI engine encountered an unexpected error. Don&apos;t worry, your code is safe.
             </p>
           </div>
           <Button 

@@ -1,6 +1,6 @@
 import { ReviewTable } from "@/features/history/components/review-table";
 import { GlassCard } from "@/components/shared/glass-card";
-import { History, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { History, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 export const metadata = {
   title: "Review History | CodePilot AI",

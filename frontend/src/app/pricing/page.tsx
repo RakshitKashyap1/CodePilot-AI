@@ -43,7 +43,7 @@ export default function PricingPage() {
           Supercharge your workflow at any scale.
         </h1>
         <p className="text-xl text-muted-foreground">
-          Choose the plan that's right for you. From solo developers to enterprise teams, we've got you covered.
+           Choose the plan that&apos;s right for you. From solo developers to enterprise teams, we&apos;ve got you covered.
         </p>
       </div>
 

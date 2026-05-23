@@ -3,8 +3,6 @@
 import React from "react";
 import { Sidebar } from "@/components/shared/sidebar";
 import { Navbar } from "@/components/shared/navbar";
-import { useAppStore } from "@/store/app-store";
-import { cn } from "@/lib/utils";
 
 import { MobileNav } from "@/components/shared/mobile-nav";
 import { PageTransition } from "@/components/shared/page-transition";

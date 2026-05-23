@@ -4,7 +4,7 @@ import React from "react";
 import { GlassCard } from "@/components/shared/glass-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Check, Zap, ArrowRight, Clock } from "lucide-react";
+import { Zap, ArrowRight, Clock } from "lucide-react";
 
 export default function BillingPage() {
   return (

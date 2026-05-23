@@ -1,14 +1,12 @@
 "use client";
 
 import React from "react";
-import { GlassCard } from "@/components/shared/glass-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
   Zap, 
   ShieldAlert, 
   MessageSquare, 
-  ChevronRight, 
   Sparkles,
   BarChart3
 } from "lucide-react";
@@ -43,7 +41,7 @@ export function AIReviewPanel() {
         ].map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
+            onClick={() => setActiveTab(tab.id as "suggestions" | "security" | "complexity")}
             className={`flex-1 flex justify-center py-3 transition-colors hover:bg-accent/50 ${
               activeTab === tab.id ? "border-b-2 border-primary text-primary bg-primary/5" : "text-muted-foreground"
             }`}

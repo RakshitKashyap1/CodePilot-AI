@@ -42,10 +42,11 @@ export function SignupForm() {
       );
       toast.success(res.data.message || "Account created!");
       router.push("/dashboard");
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errObj = err as { response?: { data?: { error?: { message?: string }; message?: string } } };
       const msg =
-        err.response?.data?.error?.message ||
-        err.response?.data?.message ||
+        errObj.response?.data?.error?.message ||
+        errObj.response?.data?.message ||
         "Registration failed.";
       toast.error(msg);
     }

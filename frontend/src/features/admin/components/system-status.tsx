@@ -1,7 +1,7 @@
 import React from "react";
 import { GlassCard } from "@/components/shared/glass-card";
 import { Badge } from "@/components/ui/badge";
-import { Activity, Server, Database, BrainCircuit, Globe } from "lucide-react";
+import { Server, Database, BrainCircuit, Globe } from "lucide-react";
 
 export function SystemStatus() {
   const systems = [

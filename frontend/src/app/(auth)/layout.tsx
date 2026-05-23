@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { GlassCard } from "@/components/shared/glass-card";
 
 export default function AuthLayout({
   children,
@@ -31,9 +30,9 @@ export default function AuthLayout({
         <div className="relative z-10">
           <blockquote className="space-y-2">
             <p className="text-lg font-medium">
-              "The AI-powered code review platform that helps us ship 3x faster
+              &ldquo;The AI-powered code review platform that helps us ship 3x faster
               with zero security compromises. Truly a game-changer for our
-              engineering team."
+              engineering team.&rdquo;
             </p>
             <footer className="text-sm text-zinc-400">
               — Sarah Chen, Lead Engineer at TechFlow

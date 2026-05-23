@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   Users, 
-  DollarSign, 
   TrendingUp, 
   AlertCircle, 
   Search,

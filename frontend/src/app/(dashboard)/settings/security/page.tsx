@@ -4,12 +4,12 @@ import React from "react";
 import { GlassCard } from "@/components/shared/glass-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Key, Shield, Copy, RefreshCw, Trash2 } from "lucide-react";
+import { Key, Shield, Copy, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
 export default function SecuritySettingsPage() {
-  const [keys, setKeys] = React.useState([
+  const [keys] = React.useState([
     { id: "1", name: "Development Key", value: "cp_live_492...8a3", date: "May 12, 2024" },
     { id: "2", name: "Production Key", value: "cp_live_128...2f1", date: "May 01, 2024" },
   ]);

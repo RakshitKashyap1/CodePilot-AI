@@ -37,10 +37,11 @@ export function LoginForm() {
       );
       toast.success(res.data.message || "Login successful");
       router.push("/dashboard");
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errObj = err as { response?: { data?: { error?: { message?: string }; message?: string } } };
       const msg =
-        err.response?.data?.error?.message ||
-        err.response?.data?.message ||
+        errObj.response?.data?.error?.message ||
+        errObj.response?.data?.message ||
         "Login failed. Check your credentials.";
       toast.error(msg);
     }
@@ -129,7 +130,7 @@ export function LoginForm() {
       </div>
 
       <p className="text-center text-sm text-muted-foreground">
-        Don't have an account?{" "}
+        Don&apos;t have an account?{" "}
         <Link href="/signup" className="text-primary hover:underline">
           Sign up
         </Link>

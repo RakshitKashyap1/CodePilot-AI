@@ -4,6 +4,11 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Sparkles } from "lucide-react";
 
+const SPARKLE_POSITIONS = Array.from({ length: 6 }, () => ({
+  left: Math.random() * 100,
+  top: Math.random() * 100,
+}));
+
 export function SuccessOverlay({ isVisible, onClose }: { isVisible: boolean; onClose: () => void }) {
   React.useEffect(() => {
     if (isVisible) {
@@ -29,7 +34,7 @@ export function SuccessOverlay({ isVisible, onClose }: { isVisible: boolean; onC
           >
             {/* Background Sparkles */}
             <div className="absolute inset-0 overflow-hidden rounded-3xl">
-              {[...Array(6)].map((_, i) => (
+              {SPARKLE_POSITIONS.map((pos, i) => (
                 <motion.div
                   key={i}
                   animate={{
@@ -43,8 +48,8 @@ export function SuccessOverlay({ isVisible, onClose }: { isVisible: boolean; onC
                   }}
                   className="absolute"
                   style={{
-                    left: `${Math.random() * 100}%`,
-                    top: `${Math.random() * 100}%`,
+                    left: `${pos.left}%`,
+                    top: `${pos.top}%`,
                   }}
                 >
                   <Sparkles className="h-4 w-4 text-primary" />
@@ -71,7 +76,7 @@ export function SuccessOverlay({ isVisible, onClose }: { isVisible: boolean; onC
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <Badge variant="neon">92 / 100</Badge>
+              <Badge>92 / 100</Badge>
               <span>Review Score</span>
             </motion.div>
           </motion.div>
@@ -81,7 +86,7 @@ export function SuccessOverlay({ isVisible, onClose }: { isVisible: boolean; onC
   );
 }
 
-function Badge({ children, variant }: { children: React.ReactNode; variant: string }) {
+function Badge({ children }: { children: React.ReactNode }) {
   return (
     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-primary text-white uppercase tracking-tighter">
       {children}
