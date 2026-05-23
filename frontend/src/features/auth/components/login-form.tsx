@@ -6,14 +6,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginFormValues } from "../schemas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { Mail } from "lucide-react";
 import { Github } from "@/components/shared/icons";
+import { Mail } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/auth-store";
+import api from "@/lib/api";
 
 export function LoginForm() {
+  const router = useRouter();
+  const setAuth = useAuthStore((s) => s.setAuth);
+
   const {
     register,
     handleSubmit,
@@ -23,10 +28,22 @@ export function LoginForm() {
   });
 
   const onSubmit = async (data: LoginFormValues) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    console.log("Login data:", data);
-    toast.success("Welcome back! Redirecting...");
+    try {
+      const res = await api.post("/users/login/", data);
+      const { user, access } = res.data.data;
+      setAuth(
+        { id: user.id, email: user.email, name: user.username },
+        access
+      );
+      toast.success(res.data.message || "Login successful");
+      router.push("/dashboard");
+    } catch (err: any) {
+      const msg =
+        err.response?.data?.error?.message ||
+        err.response?.data?.message ||
+        "Login failed. Check your credentials.";
+      toast.error(msg);
+    }
   };
 
   return (

@@ -11,8 +11,14 @@ import { Mail } from "lucide-react";
 import { Github } from "@/components/shared/icons";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/auth-store";
+import api from "@/lib/api";
 
 export function SignupForm() {
+  const router = useRouter();
+  const setAuth = useAuthStore((s) => s.setAuth);
+
   const {
     register,
     handleSubmit,
@@ -22,9 +28,27 @@ export function SignupForm() {
   });
 
   const onSubmit = async (data: SignupFormValues) => {
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    console.log("Signup data:", data);
-    toast.success("Account created successfully!");
+    try {
+      const res = await api.post("/users/register/", {
+        username: data.fullName,
+        email: data.email,
+        password: data.password,
+        password_confirm: data.confirmPassword,
+      });
+      const { user, access } = res.data.data;
+      setAuth(
+        { id: user.id, email: user.email, name: user.username },
+        access
+      );
+      toast.success(res.data.message || "Account created!");
+      router.push("/dashboard");
+    } catch (err: any) {
+      const msg =
+        err.response?.data?.error?.message ||
+        err.response?.data?.message ||
+        "Registration failed.";
+      toast.error(msg);
+    }
   };
 
   return (
