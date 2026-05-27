@@ -11,13 +11,11 @@ import { Github } from "@/components/shared/icons";
 import { Mail } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/store/auth-store";
-import { apiClient } from "@/lib/api-client";
+import { useAuth } from "@/hooks/useAuth";
+import { extractApiError } from "@/utils/error";
 
 export function LoginForm() {
-  const router = useRouter();
-  const setAuth = useAuthStore((s) => s.setAuth);
+  const { login } = useAuth();
 
   const {
     register,
@@ -29,21 +27,10 @@ export function LoginForm() {
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      const res = await apiClient.post("/users/login/", data);
-      const { user, access } = res.data.data;
-      setAuth(
-        { id: user.id, email: user.email, name: user.username },
-        access
-      );
-      toast.success(res.data.message || "Login successful");
-      router.push("/dashboard");
-    } catch (err: unknown) {
-      const errObj = err as { response?: { data?: { error?: { message?: string }; message?: string } } };
-      const msg =
-        errObj.response?.data?.error?.message ||
-        errObj.response?.data?.message ||
-        "Login failed. Check your credentials.";
-      toast.error(msg);
+      await login(data.email, data.password);
+      toast.success("Login successful");
+    } catch (err) {
+      toast.error(extractApiError(err, "Login failed. Check your credentials."));
     }
   };
 

@@ -11,13 +11,11 @@ import { Mail } from "lucide-react";
 import { Github } from "@/components/shared/icons";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/store/auth-store";
-import { apiClient } from "@/lib/api-client";
+import { useAuth } from "@/hooks/useAuth";
+import { extractApiError } from "@/utils/error";
 
 export function SignupForm() {
-  const router = useRouter();
-  const setAuth = useAuthStore((s) => s.setAuth);
+  const { register: signup } = useAuth();
 
   const {
     register,
@@ -29,26 +27,10 @@ export function SignupForm() {
 
   const onSubmit = async (data: SignupFormValues) => {
     try {
-      const res = await apiClient.post("/users/register/", {
-        username: data.fullName,
-        email: data.email,
-        password: data.password,
-        password_confirm: data.confirmPassword,
-      });
-      const { user, access } = res.data.data;
-      setAuth(
-        { id: user.id, email: user.email, name: user.username },
-        access
-      );
-      toast.success(res.data.message || "Account created!");
-      router.push("/dashboard");
-    } catch (err: unknown) {
-      const errObj = err as { response?: { data?: { error?: { message?: string }; message?: string } } };
-      const msg =
-        errObj.response?.data?.error?.message ||
-        errObj.response?.data?.message ||
-        "Registration failed.";
-      toast.error(msg);
+      await signup(data.fullName, data.email, data.password, data.confirmPassword);
+      toast.success("Account created!");
+    } catch (err) {
+      toast.error(extractApiError(err, "Registration failed."));
     }
   };
 
