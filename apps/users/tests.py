@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
@@ -6,6 +6,15 @@ from rest_framework import status
 User = get_user_model()
 
 
+_no_throttle = override_settings(REST_FRAMEWORK={
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '10000/minute',
+        'user': '100000/day',
+    }
+})
+
+
+@_no_throttle
 class UserRegistrationTests(APITestCase):
     def setUp(self):
         self.client = APIClient()
@@ -40,6 +49,7 @@ class UserRegistrationTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
+@_no_throttle
 class UserLoginTests(APITestCase):
     def setUp(self):
         self.client = APIClient()
@@ -75,6 +85,7 @@ class UserLoginTests(APITestCase):
         self.assertFalse(response.data["success"])
 
 
+@_no_throttle
 class UserProfileTests(APITestCase):
     def setUp(self):
         self.client = APIClient()
@@ -94,6 +105,7 @@ class UserProfileTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
+@_no_throttle
 class TokenRefreshTests(APITestCase):
     def setUp(self):
         self.client = APIClient()

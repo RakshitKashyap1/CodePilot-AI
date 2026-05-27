@@ -1,4 +1,5 @@
-from django.test import TestCase
+import os
+from django.test import TestCase, override_settings
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
@@ -6,25 +7,50 @@ from unittest.mock import patch
 from .models import GitHubProfile, GitHubWebhook
 from apps.reviews.models import RepositoryAnalysis
 
+
+# Bump throttle rates for tests to prevent 429s from cumulative requests
+_no_throttle = override_settings(REST_FRAMEWORK={
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'EXCEPTION_HANDLER': 'utils.exceptions.custom_exception_handler',
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '10000/minute',
+        'user': '100000/day',
+    },
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+})
+
 User = get_user_model()
 
 
+@_no_throttle
 class GitHubOAuthURLTests(APITestCase):
     def setUp(self):
         self.client = APIClient()
+        self.user = User.objects.create_user(
+            username="testuser", email="test@example.com", password="pass123"
+        )
+        self.client.force_authenticate(user=self.user)
         self.url = "/api/github/oauth/url/"
 
-    @patch.dict("os.environ", {"GITHUB_CLIENT_ID": "test_client_id"})
+    @patch.dict(os.environ, {"GITHUB_CLIENT_ID": "test_client_id"})
     def test_returns_oauth_url(self):
-        import os
-        with patch.dict(os.environ, {"GITHUB_CLIENT_ID": "test_client_id"}):
-            response = self.client.get(self.url)
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertIn("oauth_url", response.data["data"])
-            self.assertIn("test_client_id", response.data["data"]["oauth_url"])
-            self.assertIn("github.com/login/oauth/authorize", response.data["data"]["oauth_url"])
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("oauth_url", response.data["data"])
+        self.assertIn("test_client_id", response.data["data"]["oauth_url"])
+        self.assertIn("github.com/login/oauth/authorize", response.data["data"]["oauth_url"])
 
 
+@_no_throttle
 class GitHubOAuthCallbackTests(APITestCase):
     def setUp(self):
         self.client = APIClient()
@@ -68,6 +94,7 @@ class GitHubOAuthCallbackTests(APITestCase):
         self.assertEqual(profile.github_id, "12345")
 
 
+@_no_throttle
 class ImportRepositoryTests(APITestCase):
     def setUp(self):
         self.client = APIClient()

@@ -2,8 +2,6 @@ import os
 import json
 import time
 import requests
-from google import genai
-from google.genai import types
 from .prompt_templates import CODE_REVIEW_SYSTEM_PROMPT
 
 
@@ -13,11 +11,15 @@ class AIServiceException(Exception):
 
 class GeminiClient:
     def __init__(self):
+        from google import genai
+        from google.genai import types
+
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise AIServiceException("GEMINI_API_KEY environment variable is missing.")
         self.client = genai.Client(api_key=api_key)
         self.model_name = "gemini-2.0-flash"
+        self._genai_types = types
 
     def generate_code_review(self, code_snippet, language, retries=3):
         prompt = CODE_REVIEW_SYSTEM_PROMPT.format(language=language, code_snippet=code_snippet)
@@ -27,7 +29,7 @@ class GeminiClient:
                 response = self.client.models.generate_content(
                     model=self.model_name,
                     contents=prompt,
-                    config=types.GenerateContentConfig(
+                    config=self._genai_types.GenerateContentConfig(
                         temperature=0.2,
                         response_mime_type="application/json",
                     )

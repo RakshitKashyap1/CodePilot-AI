@@ -1,13 +1,22 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from apps.reviews.models import Review
 from apps.analytics.models import AIUsageLogs
 
+
+_no_throttle = override_settings(REST_FRAMEWORK={
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '10000/minute',
+        'user': '100000/day',
+    }
+})
+
 User = get_user_model()
 
 
+@_no_throttle
 class AnalyticsAPITests(APITestCase):
     def setUp(self):
         self.client = APIClient()

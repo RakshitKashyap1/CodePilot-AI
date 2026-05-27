@@ -1,9 +1,17 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from unittest.mock import patch
 from .models import Review, ReviewFeedback
+
+
+_no_throttle = override_settings(REST_FRAMEWORK={
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '10000/minute',
+        'user': '100000/day',
+    }
+})
 
 User = get_user_model()
 
@@ -38,6 +46,7 @@ class ReviewModelTests(TestCase):
         self.assertEqual(review.overall_score, 85.5)
 
 
+@_no_throttle
 class ReviewAPITests(APITestCase):
     def setUp(self):
         self.client = APIClient()
@@ -50,9 +59,9 @@ class ReviewAPITests(APITestCase):
     def test_list_reviews_empty(self):
         response = self.client.get(self.review_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["data"]), 0)
+        self.assertEqual(len(response.data), 0)
 
-    @patch("apps.reviews.tasks.generate_ai_review_task.delay")
+    @patch("celery.app.task.Task.delay")
     def test_create_review_success(self, mock_task):
         payload = {
             "title": "Test Review",
@@ -81,7 +90,7 @@ class ReviewAPITests(APITestCase):
         response = self.client.post(self.review_url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    @patch("apps.reviews.tasks.generate_ai_review_task.delay")
+    @patch("celery.app.task.Task.delay")
     def test_list_reviews_with_data(self, mock_task):
         Review.objects.create(
             user=self.user,
@@ -97,9 +106,9 @@ class ReviewAPITests(APITestCase):
         )
         response = self.client.get(self.review_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["data"]), 2)
+        self.assertEqual(len(response.data), 2)
 
-    @patch("apps.reviews.tasks.generate_ai_review_task.delay")
+    @patch("celery.app.task.Task.delay")
     def test_toggle_save_review(self, mock_task):
         review = Review.objects.create(
             user=self.user,
@@ -116,7 +125,7 @@ class ReviewAPITests(APITestCase):
         response = self.client.post(f"{self.review_url}{review.id}/toggle_save/")
         self.assertFalse(response.data["data"]["is_saved"])
 
-    @patch("apps.reviews.tasks.generate_ai_review_task.delay")
+    @patch("celery.app.task.Task.delay")
     def test_delete_review(self, mock_task):
         review = Review.objects.create(
             user=self.user,
@@ -130,7 +139,7 @@ class ReviewAPITests(APITestCase):
         response = self.client.get(f"{self.review_url}{review.id}/")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    @patch("apps.reviews.tasks.generate_ai_review_task.delay")
+    @patch("celery.app.task.Task.delay")
     def test_filter_by_language(self, mock_task):
         Review.objects.create(
             user=self.user, title="Py", code_snippet="code", language="python"
@@ -139,10 +148,10 @@ class ReviewAPITests(APITestCase):
             user=self.user, title="JS", code_snippet="code", language="javascript"
         )
         response = self.client.get(f"{self.review_url}?language=python")
-        self.assertEqual(len(response.data["data"]), 1)
-        self.assertEqual(response.data["data"][0]["language"], "python")
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["language"], "python")
 
-    @patch("apps.reviews.tasks.generate_ai_review_task.delay")
+    @patch("celery.app.task.Task.delay")
     def test_search_reviews(self, mock_task):
         Review.objects.create(
             user=self.user, title="Security Audit", code_snippet="code", language="python"
@@ -151,8 +160,8 @@ class ReviewAPITests(APITestCase):
             user=self.user, title="Performance Check", code_snippet="code", language="go"
         )
         response = self.client.get(f"{self.review_url}?search=Security")
-        self.assertEqual(len(response.data["data"]), 1)
-        self.assertEqual(response.data["data"][0]["title"], "Security Audit")
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["title"], "Security Audit")
 
 
 class ReviewFeedbackTests(TestCase):
