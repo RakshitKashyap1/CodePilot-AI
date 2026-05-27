@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
-import api from "@/lib/api";
+import { apiClient } from "@/lib/api-client";
 
 export function LoginForm() {
   const router = useRouter();
@@ -29,7 +29,7 @@ export function LoginForm() {
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      const res = await api.post("/users/login/", data);
+      const res = await apiClient.post("/users/login/", data);
       const { user, access } = res.data.data;
       setAuth(
         { id: user.id, email: user.email, name: user.username },

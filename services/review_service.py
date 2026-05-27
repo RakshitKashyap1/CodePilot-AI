@@ -1,7 +1,7 @@
 import time
 from apps.reviews.models import Review, ReviewFeedback
 from apps.analytics.models import AIUsageLogs
-from services.ai_client import GeminiClient
+from services.ai_client import get_ai_client
 
 def process_review_with_ai(review_id):
     """
@@ -20,7 +20,7 @@ def process_review_with_ai(review_id):
 
     # Initialize Client
     try:
-        client = GeminiClient()
+        client = get_ai_client()
         result = client.generate_code_review(
             code_snippet=review.code_snippet, 
             language=review.language
@@ -41,7 +41,7 @@ def process_review_with_ai(review_id):
         # Log failed AI usage
         AIUsageLogs.objects.create(
             user=review.user,
-            model_used='gemini-1.5-flash',
+            model_used=client.model_name,
             latency_ms=latency_ms,
             successful=False
         )
@@ -80,7 +80,7 @@ def process_review_with_ai(review_id):
     
     AIUsageLogs.objects.create(
         user=review.user,
-        model_used='gemini-1.5-flash',
+        model_used=client.model_name,
         prompt_tokens=prompt_tokens,
         completion_tokens=completion_tokens,
         total_tokens=prompt_tokens + completion_tokens,
