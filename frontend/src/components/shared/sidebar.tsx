@@ -2,16 +2,26 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { DASHBOARD_NAV_ITEMS, SETTINGS_NAV_ITEMS } from "@/constants/navigation";
 import { useAppStore } from "@/store/app-store";
+import { useAuthStore } from "@/store/auth-store";
 import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { sidebarOpen, toggleSidebar } = useAppStore();
+  const { logout } = useAuthStore();
+
+  const handleLogout = () => {
+    logout();
+    toast.success("Logged out successfully");
+    router.push("/login");
+  };
 
   return (
     <aside
@@ -95,6 +105,7 @@ export function Sidebar() {
           
           <Button
             variant="ghost"
+            onClick={handleLogout}
             className={cn(
               "w-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors",
               sidebarOpen ? "justify-start px-3" : "justify-center"

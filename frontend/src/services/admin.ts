@@ -15,7 +15,7 @@ interface RevenueMetrics {
   revenue_by_month: { month: string; revenue: number }[]
 }
 
-interface AdminUser {
+export interface AdminUser {
   id: string
   email: string
   username: string

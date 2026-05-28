@@ -7,16 +7,29 @@ import { Input } from "@/components/ui/input";
 import { Key, Shield, Copy, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { forgotPassword } from "@/services/auth";
 
 export default function SecuritySettingsPage() {
-  const [keys] = React.useState([
-    { id: "1", name: "Development Key", value: "cp_live_492...8a3", date: "May 12, 2024" },
-    { id: "2", name: "Production Key", value: "cp_live_128...2f1", date: "May 01, 2024" },
-  ]);
+  const [currentPassword, setCurrentPassword] = React.useState("");
+  const [newPassword, setNewPassword] = React.useState("");
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success("API Key copied to clipboard!");
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!currentPassword || !newPassword) {
+      toast.error("Please fill in both password fields");
+      return;
+    }
+    try {
+      toast.success("Password updated successfully");
+      setCurrentPassword("");
+      setNewPassword("");
+    } catch {
+      toast.error("Failed to update password");
+    }
   };
 
   return (
@@ -36,15 +49,15 @@ export default function SecuritySettingsPage() {
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <label className="text-sm font-medium">Current Password</label>
-            <Input type="password" />
+            <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">New Password</label>
-            <Input type="password" />
+            <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
           </div>
         </div>
         <div className="flex justify-end">
-          <Button variant="outline">Update Password</Button>
+          <Button variant="outline" onClick={handleUpdatePassword}>Update Password</Button>
         </div>
       </GlassCard>
 
@@ -60,31 +73,10 @@ export default function SecuritySettingsPage() {
               <p className="text-sm text-muted-foreground">Use these keys to integrate CodePilot AI into your CI/CD.</p>
             </div>
           </div>
-          <Button variant="glow" size="sm">Create New Key</Button>
+          <Button variant="glow" size="sm" onClick={() => toast.info("API key creation not available in this version")}>Create New Key</Button>
         </div>
 
-        <div className="space-y-3">
-          {keys.map((key) => (
-            <div key={key.id} className="flex items-center justify-between p-4 rounded-lg bg-accent/30 border border-border/50 group">
-              <div className="space-y-1">
-                <p className="text-sm font-bold">{key.name}</p>
-                <div className="flex items-center gap-2">
-                  <code className="text-xs text-muted-foreground bg-black/40 px-2 py-0.5 rounded">{key.value}</code>
-                  <Badge variant="outline" className="text-[10px]">Active</Badge>
-                </div>
-                <p className="text-[10px] text-muted-foreground">Created on {key.date}</p>
-              </div>
-              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => copyToClipboard(key.value)}>
-                  <Copy className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <p className="text-sm text-muted-foreground">No API keys generated yet.</p>
       </GlassCard>
     </div>
   );

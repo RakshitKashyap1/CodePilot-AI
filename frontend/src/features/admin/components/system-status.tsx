@@ -2,13 +2,20 @@ import React from "react";
 import { GlassCard } from "@/components/shared/glass-card";
 import { Badge } from "@/components/ui/badge";
 import { Server, Database, BrainCircuit, Globe } from "lucide-react";
+import { getSystemStatus } from "@/services/admin";
 
 export function SystemStatus() {
+  const [status, setStatus] = React.useState<{ database: string; redis: string; ai_service: string; uptime_hours: number } | null>(null);
+
+  React.useEffect(() => {
+    getSystemStatus().then(setStatus).catch(() => {});
+  }, []);
+
   const systems = [
-    { name: "Main API", status: "Operational", latency: "24ms", icon: Server, color: "text-green-500" },
-    { name: "PostgreSQL DB", status: "Operational", latency: "12ms", icon: Database, color: "text-green-500" },
-    { name: "AI Inference (v3)", status: "High Load", latency: "850ms", icon: BrainCircuit, color: "text-yellow-500" },
-    { name: "CDN / Assets", status: "Operational", latency: "5ms", icon: Globe, color: "text-green-500" },
+    { name: "Main API", status: "Operational", latency: `${status?.uptime_hours ?? 0}h uptime`, icon: Server, color: "text-green-500" },
+    { name: "PostgreSQL DB", status: status?.database === "healthy" ? "Operational" : "Degraded", latency: "", icon: Database, color: status?.database === "healthy" ? "text-green-500" : "text-yellow-500" },
+    { name: "AI Inference", status: status?.ai_service === "healthy" ? "Operational" : status?.ai_service === "degraded" ? "High Load" : "Down", latency: "", icon: BrainCircuit, color: status?.ai_service === "healthy" ? "text-green-500" : "text-yellow-500" },
+    { name: "Redis Cache", status: status?.redis === "healthy" ? "Operational" : "Degraded", latency: "", icon: Globe, color: status?.redis === "healthy" ? "text-green-500" : "text-yellow-500" },
   ];
 
   return (
@@ -28,7 +35,7 @@ export function SystemStatus() {
           </div>
           <div>
             <p className="text-sm font-bold">{system.name}</p>
-            <p className="text-xs text-muted-foreground">Latency: {system.latency}</p>
+            {system.latency && <p className="text-xs text-muted-foreground">{system.latency}</p>}
           </div>
         </GlassCard>
       ))}

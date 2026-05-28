@@ -8,12 +8,44 @@ import {
   ShieldAlert, 
   MessageSquare, 
   Sparkles,
-  BarChart3
+  BarChart3,
+  Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getReviewById } from "@/services/reviews";
 
-export function AIReviewPanel() {
+export function AIReviewPanel({ reviewId }: { reviewId: string | null }) {
   const [activeTab, setActiveTab] = React.useState<"suggestions" | "security" | "complexity">("suggestions");
+  const [review, setReview] = React.useState<any>(null);
+  const [loading, setLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!reviewId) return;
+    setLoading(true);
+    getReviewById(reviewId).then(setReview).catch(() => {}).finally(() => setLoading(false));
+  }, [reviewId]);
+
+  const feedbacks = review?.feedbacks ?? [];
+  const score = review?.overall_score ?? 0;
+
+  if (!reviewId) {
+    return (
+      <div className="flex items-center justify-center h-full bg-card/50 border-l border-border">
+        <p className="text-xs text-muted-foreground">Open a file to see AI insights</p>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full bg-card/50 border-l border-border">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const suggestions = feedbacks.filter((f: any) => f.issue_type === "suggestion" || f.severity !== "critical");
+  const securityIssues = feedbacks.filter((f: any) => f.issue_type === "security" || f.severity === "critical");
 
   return (
     <div className="flex flex-col h-full bg-card/50 border-l border-border">
@@ -25,10 +57,10 @@ export function AIReviewPanel() {
         </div>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-2xl font-bold">92</p>
+            <p className="text-2xl font-bold">{score || "—"}</p>
             <p className="text-[10px] text-muted-foreground uppercase">Review Score</p>
           </div>
-          <Badge variant="ai">Elite</Badge>
+          <Badge variant="ai">{score > 90 ? "Elite" : score > 75 ? "Stable" : "Needs Work"}</Badge>
         </div>
       </div>
 
@@ -61,16 +93,14 @@ export function AIReviewPanel() {
               exit={{ opacity: 0, x: -10 }}
               className="space-y-4"
             >
-              {[
-                { title: "Optimization", text: "Use `Array.map` instead of `forEach` here for better readability.", line: 42 },
-                { title: "Naming", text: "Rename `fn1` to `fetchUserData` to follow clean code principles.", line: 12 },
-              ].map((s, i) => (
+              {suggestions.length === 0 && <p className="text-xs text-muted-foreground">No suggestions available.</p>}
+              {suggestions.map((s: any, i: number) => (
                 <div key={i} className="p-3 rounded-lg bg-accent/30 border border-border/50 hover:border-primary/30 transition-all cursor-pointer group">
                   <div className="flex items-center justify-between mb-1">
-                    <Badge variant="outline" className="text-[10px]">{s.title}</Badge>
-                    <span className="text-[10px] text-muted-foreground">Line {s.line}</span>
+                    <Badge variant="outline" className="text-[10px]">{s.issue_type || "Feedback"}</Badge>
+                    {s.line_number && <span className="text-[10px] text-muted-foreground">Line {s.line_number}</span>}
                   </div>
-                  <p className="text-xs leading-relaxed">{s.text}</p>
+                  <p className="text-xs leading-relaxed">{s.description}</p>
                   <Button variant="link" size="sm" className="h-auto p-0 mt-2 text-primary group-hover:underline">Apply Fix</Button>
                 </div>
               ))}
@@ -84,14 +114,18 @@ export function AIReviewPanel() {
               exit={{ opacity: 0, x: -10 }}
               className="space-y-4"
             >
-              <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20">
-                <div className="flex items-center gap-2 mb-2 text-destructive">
-                  <ShieldAlert className="h-4 w-4" />
-                  <span className="text-xs font-bold uppercase">Critical Finding</span>
+              {securityIssues.length === 0 && <p className="text-xs text-muted-foreground">No security issues found.</p>}
+              {securityIssues.map((s: any, i: number) => (
+                <div key={i} className="p-4 rounded-lg bg-destructive/10 border border-destructive/20">
+                  <div className="flex items-center gap-2 mb-2 text-destructive">
+                    <ShieldAlert className="h-4 w-4" />
+                    <span className="text-xs font-bold uppercase">{s.severity || "Finding"}</span>
+                  </div>
+                  <p className="text-xs font-medium">{s.description}</p>
+                  {s.suggestion && <p className="text-[10px] text-muted-foreground mt-1">Suggestion: {s.suggestion}</p>}
+                  <Button variant="destructive" size="sm" className="w-full mt-3 h-8">View Security Report</Button>
                 </div>
-                <p className="text-xs font-medium">Potential SQL Injection vulnerability detected in raw query string.</p>
-                <Button variant="destructive" size="sm" className="w-full mt-3 h-8">View Security Report</Button>
-              </div>
+              ))}
             </motion.div>
           )}
         </AnimatePresence>

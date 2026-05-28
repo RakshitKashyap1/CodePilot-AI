@@ -12,42 +12,15 @@ interface FileTab {
   language: string;
 }
 
-const MOCK_FILES: FileTab[] = [
-  {
-    id: "2",
-    name: "app.ts",
-    language: "typescript",
-    content: `// CodePilot AI - Automated Review Example
-function processUserData(user: any) {
-  const result = [];
-  user.forEach((u: any) => {
-    // AI Suggestion: Consider using .map() for immutability
-    result.push(u.name);
-  });
-  return result;
-}
-
-const db_query = "SELECT * FROM users WHERE id = " + user_id; // Security: SQL Injection Risk
-`,
-  },
-  {
-    id: "3",
-    name: "utils.ts",
-    language: "typescript",
-    content: `export const formatDate = (date: Date) => {
-  return date.toLocaleDateString();
-};`,
-  },
-];
-
-export function CodeEditor({ activeFileId }: { activeFileId: string }) {
-  const activeFile = MOCK_FILES.find((f) => f.id === activeFileId) || MOCK_FILES[0];
+export function CodeEditor({ activeFileId, files }: { activeFileId: string; files?: FileTab[] }) {
+  const editorFiles = files ?? [];
+  const activeFile = editorFiles.find((f) => f.id === activeFileId) || editorFiles[0] || { id: "", name: "untitled", language: "plaintext", content: "" };
 
   return (
     <div className="flex flex-col h-full bg-[#1e1e1e]">
       {/* Tabs Bar */}
       <div className="flex items-center bg-[#252526] h-9 overflow-x-auto no-scrollbar">
-        {MOCK_FILES.map((file) => (
+        {editorFiles.map((file) => (
           <div
             key={file.id}
             className={`flex items-center gap-2 px-4 h-full cursor-pointer text-xs transition-colors border-r border-[#1e1e1e] ${

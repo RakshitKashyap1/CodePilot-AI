@@ -1,3 +1,6 @@
+"use client";
+
+import React from "react";
 import { RepoGrid } from "@/features/github/components/repo-grid";
 import { GlassCard } from "@/components/shared/glass-card";
 import { Button } from "@/components/ui/button";
@@ -5,16 +8,50 @@ import { Badge } from "@/components/ui/badge";
 import { 
   GitPullRequest, 
   Settings, 
-  ExternalLink
+  ExternalLink,
+  Loader2
 } from "lucide-react";
 import { Github } from "@/components/shared/icons";
-
-export const metadata = {
-  title: "GitHub Integration | CodePilot AI",
-  description: "Connect and manage your GitHub repositories for AI code review.",
-};
+import { listRepositories, getOAuthUrl } from "@/services/github";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function GithubPage() {
+  const [githubUser, setGithubUser] = React.useState<string | null>(null);
+  const [repos, setRepos] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const router = useRouter();
+
+  React.useEffect(() => {
+    listRepositories()
+      .then((data) => {
+        setRepos(data);
+        setGithubUser("connected");
+      })
+      .catch(() => {
+        setGithubUser(null);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleImport = async () => {
+    try {
+      const url = await getOAuthUrl();
+      if (url) window.location.href = url;
+      else toast.error("GitHub OAuth not configured");
+    } catch {
+      toast.error("GitHub OAuth not configured");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header Section */}
@@ -33,7 +70,7 @@ export default function GithubPage() {
             <Settings className="mr-2 h-4 w-4" />
             Integration Settings
           </Button>
-          <Button size="sm" variant="glow">
+          <Button size="sm" variant="glow" onClick={handleImport}>
             Import Repository
           </Button>
         </div>
@@ -42,17 +79,22 @@ export default function GithubPage() {
       {/* Integration Status Card */}
       <GlassCard className="bg-primary/5 border-primary/20 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-full bg-green-500/20 flex items-center justify-center">
-            <CheckCircleIcon className="h-6 w-6 text-green-500" />
+          <div className={`h-12 w-12 rounded-full ${githubUser ? "bg-green-500/20" : "bg-yellow-500/20"} flex items-center justify-center`}>
+            <svg className={`h-6 w-6 ${githubUser ? "text-green-500" : "text-yellow-500"}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {githubUser ? (
+                <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></>
+              ) : (
+                <><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></>
+              )}
+            </svg>
           </div>
           <div>
-            <h3 className="font-bold">Connected as @rakshitkashyap</h3>
-            <p className="text-sm text-muted-foreground">Successfully linked to your GitHub account. All webhooks are active.</p>
+            <h3 className="font-bold">{githubUser ? "Connected" : "Not Connected"}</h3>
+            <p className="text-sm text-muted-foreground">{githubUser ? "Successfully linked to your GitHub account." : "Connect your GitHub account to enable automated PR reviews."}</p>
           </div>
         </div>
         <div className="flex gap-2">
-          <Badge variant="neon">Webhooks Active</Badge>
-          <Badge variant="outline">OAuth v2</Badge>
+          <Badge variant={githubUser ? "neon" : "outline"}>{githubUser ? "Connected" : "Disconnected"}</Badge>
         </div>
       </GlassCard>
 
@@ -60,63 +102,10 @@ export default function GithubPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold">Your Repositories</h2>
-          <p className="text-sm text-muted-foreground">3 Connected Repos</p>
+          <p className="text-sm text-muted-foreground">{repos.length} Connected Repos</p>
         </div>
-        <RepoGrid />
-      </div>
-
-      {/* Active Pull Requests Section */}
-      <div className="space-y-6">
-        <h2 className="text-xl font-bold flex items-center gap-2">
-          <GitPullRequest className="h-5 w-5 text-primary" />
-          Pending Pull Requests
-        </h2>
-        <GlassCard className="p-0 overflow-hidden">
-          <div className="divide-y divide-border">
-            {[
-              { title: "feat: add vector database support", author: "alice", repo: "codepilot-backend", pr: "#42", date: "1h ago" },
-              { title: "fix: resolve memory leak in editor", author: "bob", repo: "frontend-ui", pr: "#128", date: "4h ago" },
-            ].map((pr, i) => (
-              <div key={i} className="flex items-center justify-between p-4 hover:bg-white/5 transition-colors cursor-pointer group">
-                <div className="flex items-center gap-4">
-                  <div className="h-8 w-8 rounded bg-accent flex items-center justify-center">
-                    <GitPullRequest className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium group-hover:text-primary transition-colors">{pr.title}</p>
-                    <p className="text-xs text-muted-foreground">{pr.repo} {pr.pr} by @{pr.author} • {pr.date}</p>
-                  </div>
-                </div>
-                <Button variant="ghost" size="sm" className="h-8 px-3">
-                  Review in Workspace
-                  <ExternalLink className="ml-2 h-3 w-3" />
-                </Button>
-              </div>
-            ))}
-          </div>
-          {/* No PRs footer or empty state would go here */}
-        </GlassCard>
+        <RepoGrid repos={repos} onImport={handleImport} />
       </div>
     </div>
-  );
-}
-
-function CheckCircleIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-      <polyline points="22 4 12 14.01 9 11.01" />
-    </svg>
   );
 }

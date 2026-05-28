@@ -12,35 +12,17 @@ interface FileNode {
   language?: string;
 }
 
-const MOCK_FILES: FileNode[] = [
-  {
-    id: "1",
-    name: "src",
-    type: "folder",
-    children: [
-      { id: "2", name: "app.ts", type: "file", language: "typescript" },
-      { id: "3", name: "utils.ts", type: "file", language: "typescript" },
-      {
-        id: "4",
-        name: "components",
-        type: "folder",
-        children: [
-          { id: "5", name: "Button.tsx", type: "file", language: "typescript" },
-        ],
-      },
-    ],
-  },
-  { id: "6", name: "package.json", type: "file", language: "json" },
-];
-
 export function FileExplorer({
   activeFileId,
   onFileSelect,
+  files,
 }: {
   activeFileId: string;
   onFileSelect: (fileId: string) => void;
+  files?: FileNode[];
 }) {
-  const [expanded, setExpanded] = React.useState<Record<string, boolean>>({ "1": true });
+  const [expanded, setExpanded] = React.useState<Record<string, boolean>>({});
+  const fileTree = files ?? [];
 
   const toggleFolder = (id: string) => {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -80,7 +62,7 @@ export function FileExplorer({
         Files
       </div>
       <div className="px-2">
-        {MOCK_FILES.map((node) => renderNode(node))}
+        {fileTree.map((node) => renderNode(node))}
       </div>
     </div>
   );
