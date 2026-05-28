@@ -3,14 +3,16 @@
 import React from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 
-const data = [
-  { name: "TypeScript", value: 45, color: "#3178c6" },
-  { name: "Python", value: 30, color: "#3776ab" },
-  { name: "Go", value: 15, color: "#00add8" },
-  { name: "Rust", value: 10, color: "#dea584" },
-];
+interface LanguageUsage {
+  name: string;
+  value: number;
+  color?: string;
+}
 
-export function LanguageUsageChart() {
+const COLORS = ["#3178c6", "#3776ab", "#00add8", "#dea584", "#f0db4f", "#e34c26"];
+
+export function LanguageUsageChart({ data }: { data?: LanguageUsage[] }) {
+  const chartData = data ?? [];
   return (
     <div className="h-[300px] w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -24,8 +26,8 @@ export function LanguageUsageChart() {
             paddingAngle={5}
             dataKey="value"
           >
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} stroke="none" />
             ))}
           </Pie>
           <Tooltip

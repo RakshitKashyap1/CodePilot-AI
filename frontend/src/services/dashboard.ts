@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api-client"
 import type { ApiResponse } from "@/types"
 
-interface DashboardStats {
+export interface DashboardStats {
   overview: {
     total_reviews: number
     completed_reviews: number

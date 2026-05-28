@@ -11,21 +11,17 @@ import {
   Area,
 } from "recharts";
 
-const data = [
-  { name: "Mon", reviews: 4 },
-  { name: "Tue", reviews: 7 },
-  { name: "Wed", reviews: 5 },
-  { name: "Thu", reviews: 8 },
-  { name: "Fri", reviews: 12 },
-  { name: "Sat", reviews: 6 },
-  { name: "Sun", reviews: 9 },
-];
+interface ReviewTrend {
+  name: string;
+  reviews: number;
+}
 
-export function ReviewTrendsChart() {
+export function ReviewTrendsChart({ data }: { data?: ReviewTrend[] }) {
+  const chartData = data ?? [];
   return (
     <div className="h-[300px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data}>
+        <AreaChart data={chartData}>
           <defs>
             <linearGradient id="colorReviews" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />

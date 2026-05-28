@@ -1,13 +1,30 @@
+"use client";
+
+import React from "react";
 import { ReviewTable } from "@/features/history/components/review-table";
 import { GlassCard } from "@/components/shared/glass-card";
-import { History, AlertTriangle, CheckCircle2 } from "lucide-react";
-
-export const metadata = {
-  title: "Review History | CodePilot AI",
-  description: "View and manage your past AI code reviews.",
-};
+import { History, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
+import { getDashboardStats } from "@/services/dashboard";
 
 export default function HistoryPage() {
+  const [totalReviews, setTotalReviews] = React.useState<number | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    getDashboardStats()
+      .then((stats) => setTotalReviews(stats.overview.total_reviews))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header Section */}
@@ -21,9 +38,9 @@ export default function HistoryPage() {
       {/* History Overview Stats */}
       <div className="grid gap-4 md:grid-cols-3">
         {[
-          { label: "Total Reviews", value: "128", icon: History, color: "text-blue-500" },
-          { label: "Critical Fixed", value: "42", icon: CheckCircle2, color: "text-green-500" },
-          { label: "Open Issues", value: "7", icon: AlertTriangle, color: "text-red-500" },
+          { label: "Total Reviews", value: String(totalReviews ?? 0), icon: History, color: "text-blue-500" },
+          { label: "Critical Fixed", value: "0", icon: CheckCircle2, color: "text-green-500" },
+          { label: "Open Issues", value: "0", icon: AlertTriangle, color: "text-red-500" },
         ].map((stat, i) => (
           <GlassCard key={i} className="flex items-center gap-4 py-4">
             <div className={`rounded-lg bg-white/5 p-3 ${stat.color}`}>

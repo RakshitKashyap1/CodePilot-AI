@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { GlassCard } from "@/components/shared/glass-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,9 +11,12 @@ import {
   Zap, 
   ArrowUpRight, 
   MoreHorizontal,
-  Clock
+  Clock,
+  Loader2
 } from "lucide-react";
 import { Github } from "@/components/shared/icons";
+import { getDashboardStats } from "@/services/dashboard";
+import type { DashboardStats } from "@/services/dashboard";
 
 const ReviewTrendsChart = dynamic(() => import("@/features/dashboard/components/review-trends-chart").then(mod => mod.ReviewTrendsChart), {
   ssr: false,
@@ -27,6 +31,27 @@ const LanguageUsageChart = dynamic(() => import("@/features/dashboard/components
 import { QuickActions } from "@/features/dashboard/components/quick-actions";
 
 export default function DashboardPage() {
+  const [stats, setStats] = React.useState<DashboardStats | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    getDashboardStats()
+      .then(setStats)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const overview = stats?.overview ?? { total_reviews: 0, completed_reviews: 0, average_score: 0 };
+  const activityGraph = stats?.activity_graph?.map(d => ({ name: d.date, reviews: d.count })) ?? [];
+  const languageData = stats?.language_usage?.map(d => ({ name: d.language, value: d.count })) ?? [];
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header Section */}
@@ -51,10 +76,10 @@ export default function DashboardPage() {
       {/* Quick Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: "Total Reviews", value: "128", trend: "+12%", icon: Terminal, color: "text-blue-500" },
-          { label: "AI Insights", value: "1,042", trend: "+24%", icon: Zap, color: "text-yellow-500" },
-          { label: "Repositories", value: "12", trend: "0%", icon: Github, color: "text-purple-500" },
-          { label: "Security Score", value: "94/100", trend: "+3%", icon: Code2, color: "text-green-500" },
+          { label: "Total Reviews", value: String(overview.total_reviews), trend: "+12%", icon: Terminal, color: "text-blue-500" },
+          { label: "AI Insights", value: String(stats?.issue_breakdown ? Object.keys(stats.issue_breakdown).length * 10 : "1,042"), trend: "+24%", icon: Zap, color: "text-yellow-500" },
+          { label: "Repositories", value: String(stats?.language_usage?.length || 0), trend: "0%", icon: Github, color: "text-purple-500" },
+          { label: "Security Score", value: `${overview.average_score}/100`, trend: "+3%", icon: Code2, color: "text-green-500" },
         ].map((stat, i) => (
           <GlassCard key={i} className="relative overflow-hidden group">
             <div className="flex items-center justify-between">
@@ -86,7 +111,7 @@ export default function DashboardPage() {
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </div>
-          <ReviewTrendsChart />
+          <ReviewTrendsChart data={activityGraph} />
         </GlassCard>
 
         {/* Language Usage Pie Chart */}
@@ -95,7 +120,7 @@ export default function DashboardPage() {
             <h3 className="text-lg font-semibold">Language Mix</h3>
             <p className="text-sm text-muted-foreground">Distribution of scanned codebases.</p>
           </div>
-          <LanguageUsageChart />
+          <LanguageUsageChart data={languageData} />
         </GlassCard>
       </div>
 
